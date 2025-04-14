@@ -420,7 +420,7 @@ const ProjectionsPage = () => {
             </Card>
 
             {/* Portfolio Table for What If */}
-            <Card title="Portfolio Allocation & 'What If' Analysis" style={{ marginBottom: '24px' }}>
+            <Card title="Portfolio Allocation & Reallocate funds Analysis" style={{ marginBottom: '24px' }}>
                 <Alert type="info" message="Edit 'Current Amount' to simulate changes ('What If') and then click 'Run Projections'." style={{ marginBottom: '15px' }} />
                 <Form form={form} component={false}>
                     <Table
