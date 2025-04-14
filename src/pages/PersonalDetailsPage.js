@@ -1,5 +1,5 @@
 // src/pages/PersonalDetailsPage.js
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
     Typography, Card, Descriptions, Table, Select, InputNumber, Button, Space, Form, Input, DatePicker, Row, Col
 } from 'antd';
@@ -143,13 +143,13 @@ const PersonalDetailsPage = () => {
     const [incomeData, setIncomeData] = useState(initialIncome);
     const [expensesData, setExpensesData] = useState(initialExpenses);
     const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM')); // Default to current month
-    const [isEditing, setIsEditing] = useState(false);
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Track unsaved changes
     const [form] = Form.useForm(); // Form instance for editing personal info
-    const { user } = useContext(AuthContext); // <--- Get user from context
+    const { user } = useContext(AuthContext); // Get user from context
     const userEmail = user ? user.email : null;
+
     useEffect(() => {
-        // Replace with dynamic email
         const fetchData = async () => {
             const data = await fetchPersonalDetails(userEmail);
             if (data) {
@@ -161,144 +161,50 @@ const PersonalDetailsPage = () => {
         fetchData();
     }, [user]);
 
-
     // Handle edits in tables
     const handleIncomeChange = (key, field, value) => {
-        console.log(`Expense Change: Key=${key}, Field=${field}, NewValue=${value}`);
         const newData = incomeData.map(item =>
             item.key === key ? { ...item, [field]: value } : item
         );
         setIncomeData(newData);
+        setHasUnsavedChanges(true); // Mark as unsaved
     };
 
     const handleExpenseChange = (key, field, value) => {
-        console.log(`Expense Change: Key=${key}, Field=${field}, NewValue=${value}`);
         const newData = expensesData.map(item =>
             item.key === key ? { ...item, [field]: value } : item
         );
         setExpensesData(newData);
+        setHasUnsavedChanges(true); // Mark as unsaved
     };
 
-    // Handle adding/removing expenses
-    const addExpenseRow = () => {
-        const newKey = (expensesData.length + 1).toString();
-        setExpensesData([...expensesData, { key: newKey, category: '', amount: 0 }]);
-    };
-
-    const removeExpenseRow = (key) => {
-        setExpensesData(expensesData.filter(item => item.key !== key));
-    };
-
-    // Handle editing personal info
-    const handleEditToggle = () => {
-        if (!isEditingPersonalInfo) {
-            form.setFieldsValue({
-                ...personalInfo,
-                dob: personalInfo.dob ? dayjs(personalInfo.dob) : null, // Ensure dob is a dayjs object for DatePicker
-            });
-        }
-        setIsEditingPersonalInfo(!isEditingPersonalInfo);
-    };
-
-    const handleSavePersonalInfo = async (values) => {
-        console.log('Saving Personal Info:', values);
-         // Replace with dynamic email
-        const updatedPersonalInfo = {
-            ...values,
-            dob: values.dob ? dayjs(values.dob) : null, // Store as dayjs object or null
-        };
-        const success = await updatePersonalDetails(userEmail, updatedPersonalInfo, incomeData, expensesData); // Pass incomeData and expensesData
-        if (success) {
-            setPersonalInfo(updatedPersonalInfo);
-            setIsEditingPersonalInfo(false);
-        }
-    };
     const handleSaveFinancialInfo = async () => {
-        console.log('Saving Financial Info:', { incomeData, expensesData });
         const success = await updatePersonalDetails(userEmail, personalInfo, incomeData, expensesData);
         if (success) {
-            console.log('Financial information saved successfully.');
+            setHasUnsavedChanges(false); // Reset unsaved changes after saving
         }
     };
-
 
     // Calculate Totals
     const totalIncome = incomeData.reduce((sum, item) => sum + (item.amount || 0), 0);
     const totalExpenses = expensesData.reduce((sum, item) => sum + (item.amount || 0), 0);
     const netSavings = totalIncome - totalExpenses;
 
-    // Table Columns
-    const incomeColumns = [
-        { title: 'Sr. No.', dataIndex: 'key', render: (text, record, index) => index + 1 },
-        { title: 'Income Source', dataIndex: 'type' },
-        {
-            title: 'Amount', dataIndex: 'amount', width: 150,
-            render: (text, record) => (
-                <InputNumber
-                    value={typeof text === 'number' ? text : null}
-                    onChange={(value) => {
-                        console.log('InputNumber Changed:', value);
-                        handleIncomeChange(record?.key, 'amount', value);
-                    }}
-                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value.replace(/₹\s?|(,*)/g, '')}
-                    style={{ width: '100%' }}
-                />
-            )
-        },
-    ];
-
-    const expensesColumns = [
-        { title: 'Sr. No.', dataIndex: 'key', render: (text, record, index) => index + 1, width: 60 },
-        {
-            title: 'Expense Category',
-            dataIndex: 'category',
-            render: (text, record) => (
-                <Input
-                    value={text}
-                    onChange={(e) => handleExpenseChange(record.key, 'category', e.target.value)}
-                    placeholder="Enter category"
-                />
-            )
-        },
-        {
-            title: 'Amount', dataIndex: 'amount', width: 150,
-            render: (text, record) => (
-                <InputNumber
-                    value={typeof text === 'number' ? text : null}
-                    onChange={(value) => {
-                        console.log('InputNumber Changed:', value);
-                        handleExpenseChange(record?.key, 'amount', value);
-                    }}
-                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value.replace(/₹\s?|(,*)/g, '')}
-                    style={{ width: '100%' }}
-                />
-            )
-        },
-        {
-            title: 'Action',
-            key: 'action',
-            width: 80,
-            render: (_, record) => (
-                <Button
-                    icon={<DeleteOutlined />}
-                    onClick={() => removeExpenseRow(record.key)}
-                    danger
-                    type="link"
-                />
-            ),
-        },
-    ];
-
     return (
         <div>
             <Title level={2} style={{ marginBottom: '24px' }}>Personal Details & Finances</Title>
 
             {/* Personal Details Section */}
-            <Card title="Personal Information" extra={<Button onClick={handleEditToggle}>{isEditing ? 'Cancel' : 'Edit'}</Button>} style={{ marginBottom: '24px' }}>
+            <Card title="Personal Information" extra={<Button onClick={() => setIsEditingPersonalInfo(!isEditingPersonalInfo)}>{isEditingPersonalInfo ? 'Cancel' : 'Edit'}</Button>} style={{ marginBottom: '24px' }}>
                 {isEditingPersonalInfo ? (
-                    <Form form={form} layout="vertical" onFinish={handleSavePersonalInfo}>
+                    <Form form={form} layout="vertical" onFinish={(values) => {
+                        const updatedPersonalInfo = {
+                            ...values,
+                            dob: values.dob ? dayjs(values.dob) : null, // Store as dayjs object or null
+                        };
+                        setPersonalInfo(updatedPersonalInfo);
+                        setIsEditingPersonalInfo(false);
+                    }}>
                         <Row gutter={16}>
                             <Col xs={24} sm={12}><Form.Item name="name" label="Name" rules={[{ required: true }]}><Input /></Form.Item></Col>
                             <Col xs={24} sm={12}><Form.Item name="dob" label="D.O.B. / Age"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
@@ -341,7 +247,7 @@ const PersonalDetailsPage = () => {
                         </Row>
 
                         <Button type="primary" htmlType='submit'>Save Changes</Button>
-                        <Button style={{ marginLeft: 8 }} onClick={handleEditToggle}>Cancel</Button>
+                        <Button style={{ marginLeft: 8 }} onClick={() => setIsEditingPersonalInfo(false)}>Cancel</Button>
 
                     </Form>
                 ) : (
@@ -368,7 +274,22 @@ const PersonalDetailsPage = () => {
             {/* Income Table */}
             <Card title={`Monthly Income (${dayjs(selectedMonth).format('MMMM YYYY')})`} style={{ marginBottom: '24px' }}>
                 <Table
-                    columns={incomeColumns}
+                    columns={[
+                        { title: 'Sr. No.', dataIndex: 'key', render: (text, record, index) => index + 1 },
+                        { title: 'Income Source', dataIndex: 'type' },
+                        {
+                            title: 'Amount', dataIndex: 'amount', width: 150,
+                            render: (text, record) => (
+                                <InputNumber
+                                    value={typeof text === 'number' ? text : null}
+                                    onChange={(value) => handleIncomeChange(record?.key, 'amount', value)}
+                                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    parser={value => value.replace(/₹\s?|(,*)/g, '')}
+                                    style={{ width: '100%' }}
+                                />
+                            )
+                        },
+                    ]}
                     dataSource={incomeData}
                     pagination={false}
                     bordered
@@ -392,9 +313,28 @@ const PersonalDetailsPage = () => {
             </Card>
 
             {/* Expenses Table */}
-            <Card title={`Monthly Expenses (${dayjs(selectedMonth).format('MMMM YYYY')})`} extra={<Button type="primary" onClick={handleSaveFinancialInfo}>Save Changes</Button>}>
+            <Card
+                title={`Monthly Expenses (${dayjs(selectedMonth).format('MMMM YYYY')})`}
+                extra={
+                    <Button
+                        type="primary"
+                        onClick={handleSaveFinancialInfo}
+                        disabled={!hasUnsavedChanges} // Disable button if no unsaved changes
+                        style={{
+                            backgroundColor: hasUnsavedChanges ? '#1890ff' : '#d9d9d9', // Blue if unsaved, gray otherwise
+                            borderColor: hasUnsavedChanges ? '#1890ff' : '#d9d9d9',
+                        }}
+                    >
+                        Save Changes
+                    </Button>
+                }
+            >
                 <Button
-                    onClick={addExpenseRow}
+                    onClick={() => {
+                        const newKey = (expensesData.length + 1).toString();
+                        setExpensesData([...expensesData, { key: newKey, category: '', amount: 0 }]);
+                        setHasUnsavedChanges(true); // Mark as unsaved
+                    }}
                     type="dashed"
                     icon={<PlusOutlined />}
                     style={{ marginBottom: 16, width: '100%' }}
@@ -402,7 +342,50 @@ const PersonalDetailsPage = () => {
                     Add Expense Row
                 </Button>
                 <Table
-                    columns={expensesColumns}
+                    columns={[
+                        { title: 'Sr. No.', dataIndex: 'key', render: (text, record, index) => index + 1, width: 60 },
+                        {
+                            title: 'Expense Category',
+                            dataIndex: 'category',
+                            render: (text, record) => (
+                                <Input
+                                    value={text}
+                                    onChange={(e) => handleExpenseChange(record.key, 'category', e.target.value)}
+                                    placeholder="Enter category"
+                                />
+                            ),
+                        },
+                        {
+                            title: 'Amount',
+                            dataIndex: 'amount',
+                            width: 150,
+                            render: (text, record) => (
+                                <InputNumber
+                                    value={typeof text === 'number' ? text : null}
+                                    onChange={(value) => handleExpenseChange(record.key, 'amount', value)}
+                                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    parser={value => value.replace(/₹\s?|(,*)/g, '')}
+                                    style={{ width: '100%' }}
+                                />
+                            ),
+                        },
+                        {
+                            title: 'Action',
+                            key: 'action',
+                            width: 80,
+                            render: (_, record) => (
+                                <Button
+                                    icon={<DeleteOutlined />}
+                                    onClick={() => {
+                                        setExpensesData(expensesData.filter(item => item.key !== record.key));
+                                        setHasUnsavedChanges(true); // Mark as unsaved
+                                    }}
+                                    danger
+                                    type="link"
+                                />
+                            ),
+                        },
+                    ]}
                     dataSource={expensesData}
                     pagination={false}
                     bordered

@@ -1,9 +1,10 @@
 // src/pages/GoalSettingPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
     Typography, Card, Form, InputNumber, Select, Button, Radio, Alert, Slider, Row, Col, Table, Statistic
 } from 'antd';
-
+import { supabase } from '../supabaseClient';
+import { AuthContext } from '../App'; // Import context for user authentication
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
@@ -24,9 +25,44 @@ const formatIndianNumber = (value) => {
     return formattedValue.toString().replace(/\B(?=(\d{2})+(?!\d))/g, ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
 };
 // --- Placeholder: Need to get current total fund value from Portfolio context/state ---
-const getCurrentPortfolioValue = () => {
-    // In a real app, fetch this from Portfolio state/context or calculate it
-    return 750000; // Example value: 75 Lakhs (using number format for calculation)
+const getCurrentPortfolioValue = async (email) => {
+    if (!email) {
+        console.error("User email is required to fetch portfolio data.");
+        return 0;
+    }
+
+    try {
+        // Fetch portfolio data from Supabase
+        const { data, error } = await supabase
+            .from('users') // Replace 'users' with your actual table name
+            .select('existing_investments') // Select the JSONB column
+            .eq('email', email)
+            .single();
+
+        if (error) {
+            console.error("Error fetching portfolio data:", error.message);
+            return 0;
+        }
+
+        const investments = data?.existing_investments || {};
+        let portfolioValue = 0;
+
+        // Calculate the total portfolio value
+        Object.values(investments).forEach((categoryItems) => {
+            if (Array.isArray(categoryItems)) {
+                categoryItems.forEach((item) => {
+                    const currentValue = parseFloat(item.current_value || item.property_value || item.invested_amount || 0);
+                    portfolioValue += isNaN(currentValue) ? 0 : currentValue;
+                });
+            }
+        });
+
+        console.log("Calculated Portfolio Value:", portfolioValue);
+        return portfolioValue;
+    } catch (error) {
+        console.error("Error calculating portfolio value:", error.message);
+        return 0;
+    }
 };
 // -----------------------------------------------------------------------------------
 
@@ -35,8 +71,19 @@ const GoalSettingPage = () => {
     const [calculationMode, setCalculationMode] = useState('standard'); // 'standard' or 'current'
     const [goalResult, setGoalResult] = useState(null);
     const [error, setError] = useState('');
+    const [currentFundValue, setCurrentFundValue] = useState(0); // State to store portfolio value
+    const { user } = useContext(AuthContext); // Get user from context
 
-    const currentFundValue = getCurrentPortfolioValue(); // Get current value
+    useEffect(() => {
+        const fetchPortfolioValue = async () => {
+            if (user?.email) {
+                const portfolioValue = await getCurrentPortfolioValue(user.email);
+                setCurrentFundValue(portfolioValue);
+            }
+        };
+
+        fetchPortfolioValue();
+    }, [user]);
 
     const calculateFutureValue = (principal, rate, years) => {
         if (principal <= 0 || rate <= 0 || years <= 0) return principal;
@@ -44,9 +91,9 @@ const GoalSettingPage = () => {
     };
 
     const calculateRequiredPrincipal = (futureValue, rate, years) => {
-         if (futureValue <= 0 || rate <= 0 || years <= 0) return 0;
+        if (futureValue <= 0 || rate <= 0 || years <= 0) return 0;
         return futureValue / Math.pow((1 + rate), years);
-    }
+    };
 
     const onFinish = (values) => {
         setError('');
@@ -55,11 +102,8 @@ const GoalSettingPage = () => {
 
         const { years, targetCorpus } = values;
         const avgCagr = 0.12; // Placeholder: This should dynamically change based on risk/portfolio mix
-                              // For simplicity using a fixed 12% CAGR for this example calculation.
-                              // A real implementation would calculate weighted average CAGR based on portfolio.
 
         if (calculationMode === 'current') {
-            // Calculate future value based on current funds
             const futureValue = calculateFutureValue(currentFundValue, avgCagr, years);
             const isPossible = futureValue >= targetCorpus;
             setGoalResult({
@@ -69,29 +113,24 @@ const GoalSettingPage = () => {
                 possible: isPossible,
                 message: isPossible
                     ? `Based on your current fund value of ${currentFundValue.toLocaleString()} and an assumed average ${avgCagr * 100}% annual return, you could potentially reach ${futureValue.toLocaleString()} in ${years} years, achieving your target.`
-                    : `Based on your current fund value of ${currentFundValue.toLocaleString()} and an assumed average ${avgCagr * 100}% annual return, you might only reach ${futureValue.toLocaleString()} in ${years} years. This may not be enough to meet your target of ${targetCorpus.toLocaleString()}. Consider increasing contributions or adjusting your investment strategy/risk.`
+                    : `Based on your current fund value of ${currentFundValue.toLocaleString()} and an assumed average ${avgCagr * 100}% annual return, you might only reach ${futureValue.toLocaleString()} in ${years} years. This may not be enough to meet your target of ${targetCorpus.toLocaleString()}. Consider increasing contributions or adjusting your investment strategy/risk.`,
             });
-        } else { // Standard Calculations
-             // Calculate required current value OR required investment mix
-             const requiredPrincipal = calculateRequiredPrincipal(targetCorpus, avgCagr, years);
+        } else {
+            const requiredPrincipal = calculateRequiredPrincipal(targetCorpus, avgCagr, years);
 
-             if (currentFundValue >= requiredPrincipal) {
-                  setGoalResult({
+            if (currentFundValue >= requiredPrincipal) {
+                setGoalResult({
                     mode: 'standard',
                     requiredPrincipal: requiredPrincipal,
-                    message: `To achieve ${targetCorpus.toLocaleString()} in ${years} years (assuming ${avgCagr * 100}% average annual return), you need approximately ${requiredPrincipal.toLocaleString()} invested today. Your current fund value of ${currentFundValue.toLocaleString()} appears sufficient.`
+                    message: `To achieve ${targetCorpus.toLocaleString()} in ${years} years (assuming ${avgCagr * 100}% average annual return), you need approximately ${requiredPrincipal.toLocaleString()} invested today. Your current fund value of ${currentFundValue.toLocaleString()} appears sufficient.`,
                 });
-             } else {
-                 // This is where the suggestion "put 50% in stocks & 50% in MFs" comes in - needs more logic
-                 // For now, just state the required principal and the gap.
-                  setGoalResult({
+            } else {
+                setGoalResult({
                     mode: 'standard',
-                     requiredPrincipal: requiredPrincipal,
-                    message: `To achieve ${targetCorpus.toLocaleString()} in ${years} years (assuming ${avgCagr * 100}% average annual return), you need approximately ${requiredPrincipal.toLocaleString()} invested today. Your current fund value is ${currentFundValue.toLocaleString()}. You may need additional investments or a strategy targeting higher returns (e.g., higher allocation to equity).`
-                    // Suggestion: "For example, you might need to allocate X% to stocks and Y% to mutual funds..." - This requires the risk adjustment part.
+                    requiredPrincipal: requiredPrincipal,
+                    message: `To achieve ${targetCorpus.toLocaleString()} in ${years} years (assuming ${avgCagr * 100}% average annual return), you need approximately ${requiredPrincipal.toLocaleString()} invested today. Your current fund value is ${currentFundValue.toLocaleString()}. You may need additional investments or a strategy targeting higher returns (e.g., higher allocation to equity).`,
                 });
-             }
-
+            }
         }
     };
 
@@ -107,56 +146,55 @@ const GoalSettingPage = () => {
                     initialValues={{ years: 10, targetCorpus: 20000000 }} // Default: 10 years, 2 Cr
                 >
                     <Row gutter={16}>
-                         <Col xs={24} sm={12} md={8}>
+                        <Col xs={24} sm={12} md={8}>
                             <Form.Item name="years" label="Number of Years" rules={[{ required: true, type: 'number', min: 1 }]}>
                                 <InputNumber style={{ width: '100%' }} placeholder="e.g., 10" />
                             </Form.Item>
                         </Col>
-                         <Col xs={24} sm={12} md={8}>
+                        <Col xs={24} sm={12} md={8}>
                             <Form.Item name="targetCorpus" label="Target Corpus" rules={[{ required: true, type: 'number', min: 1 }]}>
-                                <InputNumber style={{ width: '100%' }} placeholder="e.g., 20000000" formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value.replace(/₹\s?|(,*)/g, '')}/>
+                                <InputNumber style={{ width: '100%' }} placeholder="e.g., 20000000" formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value.replace(/₹\s?|(,*)/g, '')} />
                             </Form.Item>
                         </Col>
-                         <Col xs={24} sm={24} md={8}>
-                             <Form.Item label="Calculation Method" name="calculationMode" initialValue="standard">
+                        <Col xs={24} sm={24} md={8}>
+                            <Form.Item label="Calculation Method" name="calculationMode" initialValue="standard">
                                 <Radio.Group onChange={(e) => setCalculationMode(e.target.value)} value={calculationMode}>
                                     <Radio value="standard">Standard Calculation</Radio>
                                     <Radio value="current">Based on Current Financials</Radio>
                                 </Radio.Group>
                             </Form.Item>
-                         </Col>
+                        </Col>
                     </Row>
 
                     <Form.Item>
                         <Button type="primary" htmlType="submit">
                             Calculate Goal Feasibility
                         </Button>
-                         <Button htmlType="button" onClick={() => { form.resetFields(); setGoalResult(null); setError(''); }} style={{marginLeft: '8px'}}>
+                        <Button htmlType="button" onClick={() => { form.resetFields(); setGoalResult(null); setError(''); }} style={{ marginLeft: '8px' }}>
                             Reset
                         </Button>
                     </Form.Item>
                 </Form>
 
-                 {/* Display Calculation Result */}
-                 {error && <Alert message={error} type="error" showIcon style={{ marginTop: '20px' }} />}
-                 {goalResult && (
-                     <Alert
+                {/* Display Calculation Result */}
+                {error && <Alert message={error} type="error" showIcon style={{ marginTop: '20px' }} />}
+                {goalResult && (
+                    <Alert
                         message={calculationMode === 'current' ? "Projection Based on Current Funds" : "Standard Goal Calculation"}
                         description={<Paragraph>{goalResult.message}</Paragraph>}
                         type={goalResult.possible === false ? "warning" : "info"} // Use warning if goal seems unlikely based on current mode
                         showIcon
                         style={{ marginTop: '20px' }}
                     />
-                 )}
+                )}
             </Card>
-
 
             {/* Placeholder for Risk Adjustment - To be implemented in next step */}
             <Card title="Risk Adjustment (Affects Projections)">
                 <Paragraph>Select your risk tolerance. This will adjust the assumed returns and suggested portfolio allocation in the projections.</Paragraph>
-                 {/* Risk Slider component will go here */}
-                 {/* Display of adjusted portfolio will go here */}
-                 <Text>Risk Adjustment Slider and dynamic portfolio display will be added in the Projections section.</Text>
+                {/* Risk Slider component will go here */}
+                {/* Display of adjusted portfolio will go here */}
+                <Text>Risk Adjustment Slider and dynamic portfolio display will be added in the Projections section.</Text>
             </Card>
 
         </div>

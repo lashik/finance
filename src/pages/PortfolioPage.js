@@ -61,18 +61,18 @@ const transformSupabaseToState = (supabaseData) => {
 
                 // --- Map Supabase fields to standardized state keys ---
                 let amount = item.invested_amount !== undefined ? parseFloat(item.invested_amount) :
-                             item.property_value !== undefined ? parseFloat(item.property_value) : 0;
+                    item.property_value !== undefined ? parseFloat(item.property_value) : 0;
                 let rateValue = item.expected_return !== undefined ? parseFloat(item.expected_return) :
-                                item.interest_rate !== undefined ? parseFloat(item.interest_rate) :
-                                item.rental_yield !== undefined ? parseFloat(item.rental_yield) : null;
+                    item.interest_rate !== undefined ? parseFloat(item.interest_rate) :
+                        item.rental_yield !== undefined ? parseFloat(item.rental_yield) : null;
                 let rateUnit = item.rental_yield !== undefined ? 'Yield' : '%'; // Default to % unless it's yield
                 let maturityDate = item.maturity_date ? dayjs(item.maturity_date) : item.maturityDate ? dayjs(item.maturityDate) : null; // Handle different casing just in case
                 let term = item.maturity_period !== undefined ? parseInt(item.maturity_period) : null;
-                 let termUnit = term ? (categoryName === 'Cash & Cash Equivalents' && typeName === 'Treasury Bills (T-Bills)' ? 'Months' : 'Years') : null; // Example logic for term unit
+                let termUnit = term ? (categoryName === 'Cash & Cash Equivalents' && typeName === 'Treasury Bills (T-Bills)' ? 'Months' : 'Years') : null; // Example logic for term unit
 
                 if (isNaN(amount)) amount = 0;
                 if (rateValue !== null && isNaN(rateValue)) rateValue = null;
-                 if (term !== null && isNaN(term)) term = null;
+                if (term !== null && isNaN(term)) term = null;
 
 
                 const transformedItem = {
@@ -85,7 +85,7 @@ const transformSupabaseToState = (supabaseData) => {
                     [KEY_MATURITY]: maturityDate,
                     [KEY_TERM]: term,
                     [KEY_TERM_UNIT]: termUnit,
-                     // Store original data if needed for reverse transformation, or handle mapping based on type later
+                    // Store original data if needed for reverse transformation, or handle mapping based on type later
                     _originalItem: { ...item } // Optional: Store original for easier reverse mapping
                 };
                 // ----------------------------------------------------
@@ -127,24 +127,24 @@ const transformStateToSupabase = (portfolioState) => {
                 }
 
                 // Map rate back based on unit or type (example logic)
-                 const rateVal = item[KEY_RATE_VALUE];
-                 if (rateVal !== null && rateVal !== undefined) {
-                     if (item[KEY_RATE_UNIT] === 'Yield') {
+                const rateVal = item[KEY_RATE_VALUE];
+                if (rateVal !== null && rateVal !== undefined) {
+                    if (item[KEY_RATE_UNIT] === 'Yield') {
                         reconstructedItem.rental_yield = rateVal.toString();
-                     } else if (originalType === 'Fixed Deposits (FDs)' || originalType === 'Corporate Bonds' || originalType === 'Savings Accounts' || originalType === 'Treasury Bills (T-Bills)') {
-                         reconstructedItem.interest_rate = rateVal.toString();
-                     } else {
-                         reconstructedItem.expected_return = rateVal.toString();
-                     }
-                 }
+                    } else if (originalType === 'Fixed Deposits (FDs)' || originalType === 'Corporate Bonds' || originalType === 'Savings Accounts' || originalType === 'Treasury Bills (T-Bills)') {
+                        reconstructedItem.interest_rate = rateVal.toString();
+                    } else {
+                        reconstructedItem.expected_return = rateVal.toString();
+                    }
+                }
 
-                 // Map term/maturity back (example logic)
-                 if (item[KEY_TERM] !== null && item[KEY_TERM] !== undefined) {
-                     reconstructedItem.maturity_period = item[KEY_TERM].toString();
-                 }
+                // Map term/maturity back (example logic)
+                if (item[KEY_TERM] !== null && item[KEY_TERM] !== undefined) {
+                    reconstructedItem.maturity_period = item[KEY_TERM].toString();
+                }
                 if (item[KEY_MATURITY]) {
-                     reconstructedItem.maturity_date = dayjs(item[KEY_MATURITY]).format('YYYY-MM-DD');
-                 }
+                    reconstructedItem.maturity_date = dayjs(item[KEY_MATURITY]).format('YYYY-MM-DD');
+                }
 
                 // Add other fields specific to the original type if needed, potentially using item._originalItem if stored
 
@@ -153,7 +153,7 @@ const transformStateToSupabase = (portfolioState) => {
             });
         }
     }
-     console.log("Transformed Supabase Data for Saving:", supabaseData);
+    console.log("Transformed Supabase Data for Saving:", supabaseData);
     return supabaseData;
 };
 
@@ -182,14 +182,14 @@ const fetchPortfolioData = async (email) => {
 const updatePortfolioData = async (email, portfolioJsonb) => {
     if (!email) return false;
     try {
-         // Use upsert: update if exists, insert if not (useful for first save)
-         // Assumes 'email' is the unique constraint column for users table
+        // Use upsert: update if exists, insert if not (useful for first save)
+        // Assumes 'email' is the unique constraint column for users table
         const { error } = await supabase
             .from('users') // OR your specific portfolios table
-             .update({ existing_investments: portfolioJsonb })
-             .eq('email', email);
-            // If using upsert and the row might not exist:
-            // .upsert({ email: email, portfolio_data: portfolioJsonb }, { onConflict: 'email' })
+            .update({ existing_investments: portfolioJsonb })
+            .eq('email', email);
+        // If using upsert and the row might not exist:
+        // .upsert({ email: email, portfolio_data: portfolioJsonb }, { onConflict: 'email' })
 
 
         if (error) throw error;
@@ -208,29 +208,29 @@ const updatePortfolioData = async (email, portfolioJsonb) => {
 const EditableCell = ({ editing, dataIndex, title, inputType, record, index, children, ...restProps }) => {
     let inputNode = <Input />;
     if (dataIndex === KEY_AMOUNT) {
-        inputNode = <InputNumber style={{ width: '100%' }} formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value.replace(/₹\s?|(,*)/g, '')}/>;
+        inputNode = <InputNumber style={{ width: '100%' }} formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value.replace(/₹\s?|(,*)/g, '')} />;
     } else if (dataIndex === KEY_RATE_VALUE) {
-         inputNode = <InputNumber style={{ width: '100%' }} />; // Allow decimals for rate
+        inputNode = <InputNumber style={{ width: '100%' }} />; // Allow decimals for rate
     } else if (dataIndex === KEY_TERM) {
         inputNode = <InputNumber style={{ width: '100%' }} min={0} precision={0} />; // Integer for term
     }
     else if (dataIndex === KEY_MATURITY) {
-        inputNode = <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD"/>;
+        inputNode = <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />;
     } else if (dataIndex === KEY_RATE_UNIT) {
-         inputNode = (
-             <Select style={{ width: '80px' }}>
+        inputNode = (
+            <Select style={{ width: '80px' }}>
                 <Option value="%">%</Option>
                 <Option value="Yield">Yield</Option>
                 {/* Add other units if needed */}
             </Select>
-         );
+        );
     } else if (dataIndex === KEY_TERM_UNIT) {
         inputNode = (
-             <Select style={{ width: '100%' }}>
+            <Select style={{ width: '100%' }}>
                 <Option value="Years">Years</Option>
                 <Option value="Months">Months</Option>
             </Select>
-         );
+        );
     }
     // Add more specific inputs if needed based on dataIndex (e.g., a Select for KEY_TYPE if editable)
 
@@ -245,16 +245,16 @@ const EditableCell = ({ editing, dataIndex, title, inputType, record, index, chi
                     {inputNode}
                 </Form.Item>
             ) : (
-                 // Format display value
+                // Format display value
                 (dataIndex === KEY_AMOUNT && typeof children === 'number')
                     ? `₹ ${children.toLocaleString()}`
-                : (dataIndex === KEY_RATE_VALUE && typeof children === 'number')
-                    ? `${children}${record[KEY_RATE_UNIT] || ''}` // Append unit if rate exists
-                 : (dataIndex === KEY_TERM && typeof children === 'number')
-                    ? `${children} ${record[KEY_TERM_UNIT] || ''}` // Append term unit
-                 : (dataIndex === KEY_MATURITY && children)
-                     ? dayjs(children).isValid() ? dayjs(children).format('YYYY-MM-DD') : 'Invalid Date'
-                : children
+                    : (dataIndex === KEY_RATE_VALUE && typeof children === 'number')
+                        ? `${children}${record[KEY_RATE_UNIT] || ''}` // Append unit if rate exists
+                        : (dataIndex === KEY_TERM && typeof children === 'number')
+                            ? `${children} ${record[KEY_TERM_UNIT] || ''}` // Append term unit
+                            : (dataIndex === KEY_MATURITY && children)
+                                ? dayjs(children).isValid() ? dayjs(children).format('YYYY-MM-DD') : 'Invalid Date'
+                                : children
             )}
         </td>
     );
@@ -270,11 +270,11 @@ const InvestmentTable = ({ categoryKey, typeKey, typeName, items, updateItems })
     const edit = (record) => {
         form.setFieldsValue({
             ...record, // Spread existing values
-             // Ensure date/numeric types are correct for form fields
-             [KEY_MATURITY]: record[KEY_MATURITY] ? dayjs(record[KEY_MATURITY]) : null,
-             [KEY_AMOUNT]: Number(record[KEY_AMOUNT]) || 0,
-             [KEY_RATE_VALUE]: record[KEY_RATE_VALUE] !== null ? Number(record[KEY_RATE_VALUE]) : null,
-             [KEY_TERM]: record[KEY_TERM] !== null ? Number(record[KEY_TERM]) : null,
+            // Ensure date/numeric types are correct for form fields
+            [KEY_MATURITY]: record[KEY_MATURITY] ? dayjs(record[KEY_MATURITY]) : null,
+            [KEY_AMOUNT]: Number(record[KEY_AMOUNT]) || 0,
+            [KEY_RATE_VALUE]: record[KEY_RATE_VALUE] !== null ? Number(record[KEY_RATE_VALUE]) : null,
+            [KEY_TERM]: record[KEY_TERM] !== null ? Number(record[KEY_TERM]) : null,
         });
         setEditingKey(record[KEY_ID]);
     };
@@ -286,28 +286,28 @@ const InvestmentTable = ({ categoryKey, typeKey, typeName, items, updateItems })
     const save = async (id) => {
         try {
             const row = await form.validateFields();
-             const newData = [...items];
-             const index = newData.findIndex(item => id === item[KEY_ID]);
+            const newData = [...items];
+            const index = newData.findIndex(item => id === item[KEY_ID]);
 
             if (index > -1) { // Existing item found
                 const item = newData[index];
                 // Create updated item, ensuring numeric types are correct
-                 const updatedItem = {
-                     ...item,
-                     ...row,
-                     [KEY_AMOUNT]: Number(row[KEY_AMOUNT]) || 0,
-                     [KEY_RATE_VALUE]: row[KEY_RATE_VALUE] !== null && row[KEY_RATE_VALUE] !== undefined ? Number(row[KEY_RATE_VALUE]) : null,
-                      [KEY_MATURITY]: row[KEY_MATURITY] ? dayjs(row[KEY_MATURITY]) : null, // Keep as dayjs
-                     [KEY_TERM]: row[KEY_TERM] !== null && row[KEY_TERM] !== undefined ? Number(row[KEY_TERM]) : null,
+                const updatedItem = {
+                    ...item,
+                    ...row,
+                    [KEY_AMOUNT]: Number(row[KEY_AMOUNT]) || 0,
+                    [KEY_RATE_VALUE]: row[KEY_RATE_VALUE] !== null && row[KEY_RATE_VALUE] !== undefined ? Number(row[KEY_RATE_VALUE]) : null,
+                    [KEY_MATURITY]: row[KEY_MATURITY] ? dayjs(row[KEY_MATURITY]) : null, // Keep as dayjs
+                    [KEY_TERM]: row[KEY_TERM] !== null && row[KEY_TERM] !== undefined ? Number(row[KEY_TERM]) : null,
 
-                 };
+                };
                 newData.splice(index, 1, updatedItem);
                 updateItems(newData); // Pass updated items array up
                 setEditingKey('');
-             } else { // Should not happen if editing existing item
-                  console.error("Item to save not found");
-                  setEditingKey(''); // Reset editing key anyway
-             }
+            } else { // Should not happen if editing existing item
+                console.error("Item to save not found");
+                setEditingKey(''); // Reset editing key anyway
+            }
 
         } catch (errInfo) {
             console.log('Validate Failed:', errInfo);
@@ -315,14 +315,14 @@ const InvestmentTable = ({ categoryKey, typeKey, typeName, items, updateItems })
     };
 
     const handleDelete = (id) => {
-         const newData = items.filter(item => item[KEY_ID] !== id);
-         updateItems(newData);
-         if(editingKey === id) {
-             setEditingKey('');
-         }
+        const newData = items.filter(item => item[KEY_ID] !== id);
+        updateItems(newData);
+        if (editingKey === id) {
+            setEditingKey('');
+        }
     };
 
-     const handleAdd = () => {
+    const handleAdd = () => {
         if (editingKey) return; // Don't add if already editing
 
         const newId = uuidv4(); // Generate unique ID
@@ -339,37 +339,42 @@ const InvestmentTable = ({ categoryKey, typeKey, typeName, items, updateItems })
         };
         updateItems([...items, newItem]);
         edit(newItem); // Immediately start editing the new row
-     };
+    };
 
     // --- Define common columns ---
     const columns = [
-        // { title: 'Type', dataIndex: KEY_TYPE, editable: false, width: 180 }, // Type is implicit in table
-        { title: 'Description', dataIndex: KEY_DESCRIPTION, editable: true, width: 250 },
-        { title: 'Amount (₹)', dataIndex: KEY_AMOUNT, editable: true, width: 150, align: 'right' },
-        { title: 'Rate', dataIndex: KEY_RATE_VALUE, editable: true, width: 100, align: 'right' },
-        { title: 'Rate Unit', dataIndex: KEY_RATE_UNIT, editable: true, width: 90 },
-        { title: 'Term', dataIndex: KEY_TERM, editable: true, width: 100, align: 'right'},
-         { title: 'Term Unit', dataIndex: KEY_TERM_UNIT, editable: true, width: 100 },
-         { title: 'Maturity', dataIndex: KEY_MATURITY, editable: true, width: 130 },
+        { title: 'Investment Description', dataIndex: KEY_DESCRIPTION, editable: true, width: 250 },
+        { title: 'Invested Amount (₹)', dataIndex: KEY_AMOUNT, editable: true, width: 150, align: 'right' },
+        { title: 'Rate of Return', dataIndex: KEY_RATE_VALUE, editable: true, width: 100, align: 'right' },
+        { title: 'Rate Unit (e.g., % or Yield)', dataIndex: KEY_RATE_UNIT, editable: true, width: 90 },
+        { title: 'Investment Term', dataIndex: KEY_TERM, editable: true, width: 100, align: 'right' },
+        { title: 'Term Unit (e.g., Years)', dataIndex: KEY_TERM_UNIT, editable: true, width: 100 },
+        { title: 'Maturity Date', dataIndex: KEY_MATURITY, editable: true, width: 130 },
         {
             title: 'Action',
             dataIndex: 'action',
-            width: 100, // Reduced width
-            fixed: 'right', // Keep actions visible
+            width: 100,
+            fixed: 'right',
             render: (_, record) => {
                 const editable = isEditing(record);
                 return editable ? (
                     <Space size="small">
-                        <Button onClick={() => save(record[KEY_ID])} type="link" icon={<SaveOutlined />} title="Save"/>
+                        <Button onClick={() => save(record[KEY_ID])} type="link" icon={<SaveOutlined />} title="Save" />
                         <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                            <Button type="link" icon={<CloseOutlined />} danger title="Cancel"/>
+                            <Button type="link" icon={<CloseOutlined />} danger title="Cancel" />
                         </Popconfirm>
                     </Space>
                 ) : (
                     <Space size="small">
-                        <Button type="link" disabled={!!editingKey} onClick={() => edit(record)} icon={<EditOutlined />} title="Edit"/>
+                        <Button
+                            type="link"
+                            disabled={!!editingKey}
+                            onClick={() => edit(record)}
+                            icon={<EditOutlined />}
+                            title="Edit"
+                        />
                         <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record[KEY_ID])}>
-                             <Button type="link" icon={<DeleteOutlined />} danger disabled={!!editingKey} title="Delete"/>
+                            <Button type="link" icon={<DeleteOutlined />} danger disabled={!!editingKey} title="Delete" />
                         </Popconfirm>
                     </Space>
                 );
@@ -377,7 +382,7 @@ const InvestmentTable = ({ categoryKey, typeKey, typeName, items, updateItems })
         },
     ];
 
-     const mergedColumns = columns.map(col => {
+    const mergedColumns = columns.map(col => {
         if (!col.editable) {
             return col;
         }
@@ -453,11 +458,11 @@ const PortfolioPage = () => {
         setPortfolio(prevPortfolio => {
             // Deep copy to ensure immutability if necessary, or careful update
             const updatedPortfolio = JSON.parse(JSON.stringify(prevPortfolio)); // Simple deep copy
-             if (updatedPortfolio[categoryKey]?.types[typeKey]) {
-                 updatedPortfolio[categoryKey].types[typeKey].items = newItems;
-             } else {
-                 console.error("Error updating state: category or type key not found");
-             }
+            if (updatedPortfolio[categoryKey]?.types[typeKey]) {
+                updatedPortfolio[categoryKey].types[typeKey].items = newItems;
+            } else {
+                console.error("Error updating state: category or type key not found");
+            }
 
             return updatedPortfolio;
         });
@@ -465,19 +470,19 @@ const PortfolioPage = () => {
 
     // Handle saving the entire portfolio back to Supabase
     const handleSavePortfolio = async () => {
-         if (!userEmail) {
-             message.error("Cannot save portfolio: User not logged in.");
-             return;
-         }
+        if (!userEmail) {
+            message.error("Cannot save portfolio: User not logged in.");
+            return;
+        }
         setSaving(true);
         try {
             const supabaseData = transformStateToSupabase(portfolio);
             await updatePortfolioData(userEmail, supabaseData);
             // Optionally re-fetch after save to ensure consistency, or trust the state
-             // fetchPortfolioData(userEmail).then(data => setPortfolio(transformSupabaseToState(data)));
+            // fetchPortfolioData(userEmail).then(data => setPortfolio(transformSupabaseToState(data)));
         } catch (error) {
             // Error message handled within updatePortfolioData
-             console.error("Error during save process:", error);
+            console.error("Error during save process:", error);
         } finally {
             setSaving(false);
         }
@@ -485,7 +490,7 @@ const PortfolioPage = () => {
 
 
     if (loading) {
-         return <Spin tip="Loading Portfolio..." size="large"><div style={{ height: '300px' }} /></Spin>;
+        return <Spin tip="Loading Portfolio..." size="large"><div style={{ height: '300px' }} /></Spin>;
     }
 
     return (
@@ -496,19 +501,46 @@ const PortfolioPage = () => {
                 onClick={handleSavePortfolio}
                 loading={saving}
                 disabled={loading}
-                style={{ marginBottom: '10px',marginTop:'15px', float: 'right' }}
+                style={{ marginBottom: '10px', marginTop: '15px', float: 'right' }}
             >
                 Save Changes
             </Button>
-            <Collapse accordion={false} defaultActiveKey={Object.keys(portfolio)} bordered={false} style={{ background: '#fff' }}>
-                 {Object.keys(portfolio).length === 0 && !loading && (
-                     <Alert message="No portfolio data found or loaded." type="info" style={{margin: '20px'}}/>
-                 )}
-                 {Object.entries(portfolio).map(([categoryKey, categoryData]) => (
-                    <Panel header={<Title level={4} style={{ margin: 0, fontWeight: 500 }}>{categoryData.name}</Title>} key={categoryKey} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                         {Object.entries(categoryData.types).map(([typeKey, typeData]) => (
-                            <div key={typeKey} style={{ marginBottom: '15px', paddingLeft: '15px', borderLeft: '3px solid #e8e8e8', marginLeft: '10px' }}>
-                                <Title level={5} style={{ marginTop: '10px', marginBottom: '5px', fontWeight: 'normal', color: '#555' }}>{typeData.name}</Title>
+            <Collapse
+                accordion={true} // Ensures only one panel is open at a time
+                defaultActiveKey={[]} // All panels start collapsed
+                bordered={false}
+                style={{ background: '#fff' }}
+            >
+                {Object.keys(portfolio).length === 0 && !loading && (
+                    <Alert message="No portfolio data found or loaded." type="info" style={{ margin: '20px' }} />
+                )}
+                {Object.entries(portfolio).map(([categoryKey, categoryData]) => (
+                    <Panel
+                        header={<Title level={4} style={{ margin: 0, fontWeight: 500 }}>{categoryData.name}</Title>}
+                        key={categoryKey}
+                        style={{ borderBottom: '1px solid #f0f0f0' }}
+                    >
+                        {Object.entries(categoryData.types).map(([typeKey, typeData]) => (
+                            <div
+                                key={typeKey}
+                                style={{
+                                    marginBottom: '15px',
+                                    paddingLeft: '15px',
+                                    borderLeft: '3px solid #e8e8e8',
+                                    marginLeft: '10px',
+                                }}
+                            >
+                                <Title
+                                    level={5}
+                                    style={{
+                                        marginTop: '10px',
+                                        marginBottom: '5px',
+                                        fontWeight: 'normal',
+                                        color: '#555',
+                                    }}
+                                >
+                                    {typeData.name}
+                                </Title>
                                 <InvestmentTable
                                     categoryKey={categoryKey}
                                     typeKey={typeKey}
@@ -517,12 +549,12 @@ const PortfolioPage = () => {
                                     updateItems={(newItems) => updatePortfolioItems(categoryKey, typeKey, newItems)}
                                 />
                             </div>
-                         ))}
+                        ))}
                     </Panel>
-                 ))}
+                ))}
             </Collapse>
 
-            
+
         </div>
     );
 };
