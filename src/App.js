@@ -1,4 +1,4 @@
-// src/App.js
+
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { Layout, Menu, Typography, Avatar, Space, ConfigProvider, theme } from 'antd';
@@ -16,7 +16,7 @@ import {
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
 
-// Import Page Components (Create these files in subsequent steps)
+
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -24,32 +24,32 @@ import PersonalDetailsPage from './pages/PersonalDetailsPage';
 import PortfolioPage from './pages/PortfolioPage';
 import GoalSettingPage from './pages/GoalSettingPage';
 import ProjectionsPage from './pages/ProjectionsPage';
-import logo from './assets/logo.png'; // Placeholder logo, replace with actual path
-// Placeholder Context for Authentication
+import logo from './assets/logo.png'; 
+
 const AuthContext = React.createContext();
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title, Text } = Typography;
 
-// --- Mock Authentication Hook ---
+
 const useAuth = () => {
-  // In a real app, this would interact with context or state management
-  const [user, setUser] = useState(null); // null = logged out, { email: '...' } = logged in
+  
+  const [user, setUser] = useState(null); 
 
   const login = (email) => setUser({ email });
   const logout = () => setUser(null);
   const register = (userData) => {
-      // Simulate registration -> login
+      
       console.log('Simulating registration:', userData);
-      // In real app, check for duplicates here or on server
+      
       login(userData.email);
   }
 
   return { user, login, logout, register };
 };
-// -----------------------------
 
-// --- Sidebar Navigation ---
+
+
 const AppSidebar = ({ collapsed }) => {
   const location = useLocation();
   const { user } = React.useContext(AuthContext);
@@ -60,11 +60,11 @@ const AppSidebar = ({ collapsed }) => {
     {
       key: '/portfolio',
       icon: <EditOutlined />,
-      label: 'Portfolio Mgmt', // Level 1
-      children: [ // Level 2 (if needed, can flatten)
+      label: 'Portfolio Mgmt', 
+      children: [ 
         {
-            key: '/portfolio/edit', // Level 3 as requested
-            icon: <EditOutlined />, // Reuse icon or use specific one
+            key: '/portfolio/edit', 
+            icon: <EditOutlined />, 
             label: <Link to="/portfolio/edit">Add / Edit Portfolio</Link>,
         }
       ]
@@ -76,17 +76,17 @@ const AppSidebar = ({ collapsed }) => {
     { key: '/register', icon: <UserAddOutlined />, label: <Link to="/register">Register</Link> },
   ];
 
-  // Find the deepest matching key for selectedKeys
+  
   const getSelectedKeys = () => {
       const path = location.pathname;
-      // Match more specific paths first
+      
       if (path.startsWith('/portfolio/edit')) return ['/portfolio/edit'];
-      if (path.startsWith('/portfolio')) return ['/portfolio']; // Catch parent if needed
-      const item = menuItems.flat().find(i => i && i.key === path); // Flatten for simple match
+      if (path.startsWith('/portfolio')) return ['/portfolio']; 
+      const item = menuItems.flat().find(i => i && i.key === path); 
       return item ? [item.key] : [];
   };
 
-   // Find parent key for defaultOpenKeys
+   
    const getDefaultOpenKeys = () => {
      const path = location.pathname;
      if (path.startsWith('/portfolio/edit')) return ['/portfolio'];
@@ -109,15 +109,15 @@ const AppSidebar = ({ collapsed }) => {
         theme="light"
         mode="inline"
         selectedKeys={getSelectedKeys()}
-        defaultOpenKeys={getDefaultOpenKeys()} // Keep portfolio open if child is active
+        defaultOpenKeys={getDefaultOpenKeys()} 
         items={menuItems}
       />
     </Sider>
   );
 };
-// -------------------------
 
-// --- Header ---
+
+
 const AppHeader = ({ collapsed, toggleCollapse }) => {
   const { user, logout } = React.useContext(AuthContext);
 
@@ -140,9 +140,9 @@ const AppHeader = ({ collapsed, toggleCollapse }) => {
     </Header>
   );
 };
-// ----------------
 
-// --- Protected Route Wrapper ---
+
+
 const ProtectedRoute = ({ children }) => {
   const { user } = React.useContext(AuthContext);
   if (!user) {
@@ -151,23 +151,23 @@ const ProtectedRoute = ({ children }) => {
   }
   return children;
 };
-// ----------------------------
 
-// --- Main App Component ---
+
+
 function App() {
   const [collapsed, setCollapsed] = useState(false);
-  const auth = useAuth(); // Use our mock auth hook
+  const auth = useAuth(); 
 
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
   };
 
-  // Ant Design Theme Configuration (Optional Customization)
+  
   const { darkAlgorithm, compactAlgorithm } = theme;
   const appTheme = {
-    // algorithm: darkAlgorithm, // Uncomment for dark theme
+    
     token: {
-      // colorPrimary: '#00b96b', // Example primary color change
+      
     },
   }
 
@@ -181,22 +181,22 @@ function App() {
               {auth.user && <AppHeader collapsed={collapsed} toggleCollapse={toggleCollapse} />}
               <Content style={{ padding: 24, background: '#E7E9F5', borderRadius: '8px' }}>
                 <Routes>
-                  {/* Public Routes */}
+                  {}
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
 
-                  {/* Protected Routes */}
+                  {}
                   <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                   <Route path="/personal-details" element={<ProtectedRoute><PersonalDetailsPage /></ProtectedRoute>} />
-                  {/* Note: Level 3 is the route, Level 2 'Portfolio Mgmt' is just menu structure */}
+                  {}
                   <Route path="/portfolio/edit" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />
                   <Route path="/goal-setting" element={<ProtectedRoute><GoalSettingPage /></ProtectedRoute>} />
                   <Route path="/projections" element={<ProtectedRoute><ProjectionsPage /></ProtectedRoute>} />
 
-                  {/* Default Route */}
+                  {}
                   <Route path="/" element={auth.user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
 
-                   {/* Catch-all for undefined routes (Optional) */}
+                   {}
                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Content>
@@ -212,4 +212,4 @@ function App() {
 }
 
 export default App;
-export { AuthContext }; // Export context for use in other components
+export { AuthContext }; 

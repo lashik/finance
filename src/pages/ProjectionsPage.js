@@ -3,10 +3,10 @@ import { Typography, Card, Slider, Row, Col, Table, InputNumber, Button, Statist
 import { SaveOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 import { supabase } from '../supabaseClient';
 import { useContext } from 'react';
-import { AuthContext } from '../App'; // Import context
+import { AuthContext } from '../App'; 
 const { Title, Text, Paragraph } = Typography;
 
-// Utility function to format numbers in the Indian numbering system
+
 const formatIndianNumber = (value) => {
     if (!value) return '0';
     const formattedValue = parseFloat(value).toFixed(2);
@@ -123,14 +123,14 @@ const ProjectionsPage = () => {
     const [projections, setProjections] = useState({ p5: 0, p10: 0, p20: 0 });
     const [editingKey, setEditingKey] = useState('');
     const [form] = Form.useForm();
-    const { user } = useContext(AuthContext); // <--- Get user from context
+    const { user } = useContext(AuthContext); 
     const userEmail = user ? user.email : null;
     const currentTotalValue = Object.values(portfolioState).reduce((sum, item) => sum + (item?.currentAmount || 0), 0);
 
 
     useEffect(() => {
         const profile = riskProfiles[riskLevel];
-        if (!profile) return; // Add guard clause
+        if (!profile) return; 
         const fetchData = async () => {
             const fetchedPortfolio = await fetchPortfolioFromSupabase(userEmail);
             if (fetchedPortfolio) {
@@ -142,31 +142,31 @@ const ProjectionsPage = () => {
         };
 
         fetchData();
-    }, [riskLevel]); // Re-run when riskLevel changes
+    }, [riskLevel]); 
 
     useEffect(() => {
         const profile = riskProfiles[riskLevel];
-        if (!profile || Object.keys(currentPortfolioSnapshot).length === 0) return; // Add guard clause
+        if (!profile || Object.keys(currentPortfolioSnapshot).length === 0) return; 
 
         const newPortfolioState = {};
         let totalCurrent = 0;
 
-        // Use snapshot for current amounts, profile for target allocation % and CAGR
+        
         Object.keys(profile.allocations).forEach(key => {
             const currentAmount = currentPortfolioSnapshot[key] || 0;
             totalCurrent += currentAmount;
             const cagrValue = standardCagr[key] || 0;
 
             newPortfolioState[key] = {
-                key: key, // Asset key
-                name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), // Format name
+                key: key, 
+                name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), 
                 currentAmount: currentAmount,
-                targetAllocation: profile.allocations[key] * 100, // Store as percentage
-                cagr: cagrValue * 100, // Store as percentage
+                targetAllocation: profile.allocations[key] * 100, 
+                cagr: cagrValue * 100, 
             };
         });
 
-        // Recalculate current allocation based on snapshot amounts
+        
         if (totalCurrent > 0) {
             Object.keys(newPortfolioState).forEach(key => {
                 newPortfolioState[key].currentAllocation = (newPortfolioState[key].currentAmount / totalCurrent * 100);
@@ -178,17 +178,17 @@ const ProjectionsPage = () => {
         }
 
         setPortfolioState(newPortfolioState);
-        // Trigger initial calculation when risk level changes
+        
         runProjections(newPortfolioState);
 
-    }, [riskLevel, currentPortfolioSnapshot]); // Add currentPortfolioSnapshot as a dependency
+    }, [riskLevel, currentPortfolioSnapshot]); 
 
     const calculateWeightedAvgCagr = (portfolio) => {
         let weightedCagrSum = 0;
         let totalValue = 0;
         Object.values(portfolio).forEach(item => {
             const amount = item.currentAmount || 0;
-            const cagr = item.cagr / 100 || 0; // Convert % back to decimal
+            const cagr = item.cagr / 100 || 0; 
             weightedCagrSum += amount * cagr;
             totalValue += amount;
         });
@@ -198,11 +198,11 @@ const ProjectionsPage = () => {
     const runProjections = (currentPort = portfolioState) => {
         if (Object.keys(currentPort).length === 0) {
             console.log("Portfolio state not ready for projection.");
-            setProjections({ p5: 0, p10: 0, p20: 0 }); // Reset projections if no data
-            return; // Exit if portfolioState is empty
+            setProjections({ p5: 0, p10: 0, p20: 0 }); 
+            return; 
         }
 
-        const profile = riskProfiles[riskLevel]; // Get the current risk profile
+        const profile = riskProfiles[riskLevel]; 
         if (!profile) {
             console.error("Invalid risk profile.");
             return;
@@ -210,15 +210,15 @@ const ProjectionsPage = () => {
 
         const totalValue = Object.values(currentPort).reduce((sum, item) => sum + (item?.currentAmount || 0), 0);
 
-        // Divide the total fund value according to the risk profile allocations
+        
         const targetAmounts = {};
         Object.keys(profile.allocations).forEach((key) => {
-            targetAmounts[key] = totalValue * profile.allocations[key]; // Target amount = total value * allocation percentage
+            targetAmounts[key] = totalValue * profile.allocations[key]; 
         });
 
         console.log(`Running projections with Total: ${totalValue}, Allocations:`, targetAmounts);
 
-        // Calculate projections based on target amounts and CAGR
+        
         const projectedValues = {
             p5: 0,
             p10: 0,
@@ -227,9 +227,9 @@ const ProjectionsPage = () => {
 
         Object.keys(targetAmounts).forEach((key) => {
             const targetAmount = targetAmounts[key] || 0;
-            const cagr = (profile.cagrs[key] || 0) / 100; // Convert CAGR percentage to decimal
+            const cagr = (profile.cagrs[key] || 0) / 100; 
 
-            // Compound growth formula: FV = PV * (1 + CAGR)^n
+            
             projectedValues.p5 += targetAmount * Math.pow(1 + cagr, 5);
             projectedValues.p10 += targetAmount * Math.pow(1 + cagr, 10);
             projectedValues.p20 += targetAmount * Math.pow(1 + cagr, 20);
@@ -244,12 +244,12 @@ const ProjectionsPage = () => {
         });
     };
 
-    // --- Editable Table Logic ---
+    
     const isEditing = record => record.key === editingKey;
 
     const edit = (record) => {
         form.setFieldsValue({
-            currentAmount: record.currentAmount, // Only allow editing amount for "What If"
+            currentAmount: record.currentAmount, 
         });
         setEditingKey(record.key);
     };
@@ -265,7 +265,7 @@ const ProjectionsPage = () => {
             if (newData[key]) {
                 newData[key] = { ...newData[key], currentAmount: row.currentAmount };
 
-                // Recalculate current allocations after changing an amount
+                
                 const newTotalValue = Object.values(newData).reduce((sum, item) => sum + (item?.currentAmount || 0), 0);
 
                 if (newTotalValue > 0) {
@@ -281,10 +281,10 @@ const ProjectionsPage = () => {
 
                 setPortfolioState(newData);
                 setEditingKey('');
-                // Optionally re-run projections immediately after save
-                // runProjections(newData);
+                
+                
             } else {
-                // handle error case?
+                
                 setEditingKey('');
             }
         } catch (errInfo) {
@@ -293,9 +293,9 @@ const ProjectionsPage = () => {
     };
 
     const handleSwap = (key, change) => {
-        // Basic swap: Increase one, decrease another (or just update one amount)
-        // This example just updates the edited amount via save()
-        // More complex swap logic could be implemented here to enforce total value constraint etc.
+        
+        
+        
         alert(`Swap logic for ${key} with change ${change} needs implementation (currently handled by direct amount edit).`);
     };
 
@@ -405,7 +405,7 @@ const ProjectionsPage = () => {
         <div>
             <Title level={2} style={{ marginBottom: '24px' }}>Portfolio Projections </Title>
 
-            {/* Risk Slider */}
+            
             <Card title="Adjust Risk Tolerance" style={{ marginBottom: '24px' }}>
                 <Slider
                     min={1}
@@ -414,12 +414,12 @@ const ProjectionsPage = () => {
                     value={riskLevel}
                     marks={{ 1: 'Low', 2: 'Medium', 3: 'High' }}
                     step={1}
-                    tooltip={{ open: true, formatter: (value) => riskProfiles[value]?.name }} // Added optional chaining
+                    tooltip={{ open: true, formatter: (value) => riskProfiles[value]?.name }} 
                 />
                 <Paragraph type="secondary" style={{ marginTop: '10px' }}>Adjusting the risk tolerance updates the target asset allocation percentages below and impacts the projection calculations.</Paragraph>
             </Card>
 
-            {/* Portfolio Table for What If */}
+            
             <Card title="Portfolio Allocation & Reallocate funds Analysis" style={{ marginBottom: '24px' }}>
                 <Alert type="info" message="Edit 'Current Amount' to simulate changes ('What If') and then click 'Run Projections'." style={{ marginBottom: '15px' }} />
                 <Form form={form} component={false}>
@@ -431,7 +431,7 @@ const ProjectionsPage = () => {
                         bordered
                         size="small"
                         rowKey="key"
-                        loading={Object.keys(portfolioState).length === 0} // Show loading if state is empty initially
+                        loading={Object.keys(portfolioState).length === 0} 
                         summary={() => {
                             const totalCurrent = Object.values(portfolioState).reduce((sum, item) => sum + (item?.currentAmount || 0), 0);
                             const totalCurrentPerc = Object.values(portfolioState).reduce((sum, item) => sum + (item?.currentAllocation || 0), 0);
@@ -442,7 +442,7 @@ const ProjectionsPage = () => {
                                     <Table.Summary.Cell index={1} align="right">{`₹ ${formatIndianNumber(totalCurrent)}`}</Table.Summary.Cell>
                                     <Table.Summary.Cell index={2}>{`${totalCurrentPerc.toFixed(1)}%`}</Table.Summary.Cell>
                                     <Table.Summary.Cell index={3}>{`${totalTargetPerc.toFixed(1)}%`}</Table.Summary.Cell>
-                                    <Table.Summary.Cell index={4} colSpan={2}></Table.Summary.Cell>{/* Empty cells for CAGR/Action */}
+                                    <Table.Summary.Cell index={4} colSpan={2}></Table.Summary.Cell>
                                 </Table.Summary.Row>
                             );
                         }}
@@ -454,7 +454,7 @@ const ProjectionsPage = () => {
             </Card>
 
 
-            {/* Projections Display */}
+            
             <Card title="Net Worth Projections">
                 <Row gutter={16}>
                     <Col xs={24} sm={8}>

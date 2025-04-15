@@ -1,18 +1,18 @@
-// src/pages/GoalSettingPage.js
+
 import React, { useState, useEffect, useContext } from 'react';
 import {
     Typography, Card, Form, InputNumber, Select, Button, Radio, Alert, Slider, Row, Col, Table, Statistic
 } from 'antd';
 import { supabase } from '../supabaseClient';
-import { AuthContext } from '../App'; // Import context for user authentication
+import { AuthContext } from '../App'; 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
-// --- CAGR Assumptions (Standard) ---
+
 const standardCagr = {
     equity_direct: 0.18, equity_mutual: 0.14, equity_etf: 0.11, equity_caps: 0.12,
     fixed_govt: 0.07, fixed_corp: 0.09, fixed_fd: 0.065, fixed_debt_mf: 0.05,
-    real_estate_residential: 0.02, real_estate_commercial: 0.08, real_estate_reit: null, // N/A
+    real_estate_residential: 0.02, real_estate_commercial: 0.08, real_estate_reit: null, 
     commodities_gold_silver: 0.05, commodities_oil_gas: 0.06, commodities_agri: 0.025,
     alternative_pe_vc: 0.30, alternative_hedge: 0.14, alternative_collectibles: 0.07,
     crypto_coins: 0.15, crypto_nft: 0.12,
@@ -24,7 +24,7 @@ const formatIndianNumber = (value) => {
     const formattedValue = parseFloat(value).toFixed(2);
     return formattedValue.toString().replace(/\B(?=(\d{2})+(?!\d))/g, ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
 };
-// --- Placeholder: Need to get current total fund value from Portfolio context/state ---
+
 const getCurrentPortfolioValue = async (email) => {
     if (!email) {
         console.error("User email is required to fetch portfolio data.");
@@ -32,10 +32,10 @@ const getCurrentPortfolioValue = async (email) => {
     }
 
     try {
-        // Fetch portfolio data from Supabase
+        
         const { data, error } = await supabase
-            .from('users') // Replace 'users' with your actual table name
-            .select('existing_investments') // Select the JSONB column
+            .from('users') 
+            .select('existing_investments') 
             .eq('email', email)
             .single();
 
@@ -44,10 +44,10 @@ const getCurrentPortfolioValue = async (email) => {
             return 0;
         }
 
-        const investments = data?.existing_investments || {};
+        const investments = data?.existing_investments || {} ;
         let portfolioValue = 0;
 
-        // Calculate the total portfolio value
+        
         Object.values(investments).forEach((categoryItems) => {
             if (Array.isArray(categoryItems)) {
                 categoryItems.forEach((item) => {
@@ -64,15 +64,15 @@ const getCurrentPortfolioValue = async (email) => {
         return 0;
     }
 };
-// -----------------------------------------------------------------------------------
+
 
 const GoalSettingPage = () => {
     const [form] = Form.useForm();
-    const [calculationMode, setCalculationMode] = useState('standard'); // 'standard' or 'current'
+    const [calculationMode, setCalculationMode] = useState('standard'); 
     const [goalResult, setGoalResult] = useState(null);
     const [error, setError] = useState('');
-    const [currentFundValue, setCurrentFundValue] = useState(0); // State to store portfolio value
-    const { user } = useContext(AuthContext); // Get user from context
+    const [currentFundValue, setCurrentFundValue] = useState(0); 
+    const { user } = useContext(AuthContext); 
 
     useEffect(() => {
         const fetchPortfolioValue = async () => {
@@ -101,7 +101,7 @@ const GoalSettingPage = () => {
         console.log('Goal Settings:', values);
 
         const { years, targetCorpus } = values;
-        const avgCagr = 0.12; // Placeholder: This should dynamically change based on risk/portfolio mix
+        const avgCagr = 0.12; 
 
         if (calculationMode === 'current') {
             const futureValue = calculateFutureValue(currentFundValue, avgCagr, years);
@@ -143,7 +143,7 @@ const GoalSettingPage = () => {
                     form={form}
                     layout="vertical"
                     onFinish={onFinish}
-                    initialValues={{ years: 10, targetCorpus: 20000000 }} // Default: 10 years, 2 Cr
+                    initialValues={{ years: 10, targetCorpus: 20000000 }} 
                 >
                     <Row gutter={16}>
                         <Col xs={24} sm={12} md={8}>
@@ -176,24 +176,24 @@ const GoalSettingPage = () => {
                     </Form.Item>
                 </Form>
 
-                {/* Display Calculation Result */}
+                
                 {error && <Alert message={error} type="error" showIcon style={{ marginTop: '20px' }} />}
                 {goalResult && (
                     <Alert
                         message={calculationMode === 'current' ? "Projection Based on Current Funds" : "Standard Goal Calculation"}
                         description={<Paragraph>{goalResult.message}</Paragraph>}
-                        type={goalResult.possible === false ? "warning" : "info"} // Use warning if goal seems unlikely based on current mode
+                        type={goalResult.possible === false ? "warning" : "info"} 
                         showIcon
                         style={{ marginTop: '20px' }}
                     />
                 )}
             </Card>
 
-            {/* Placeholder for Risk Adjustment - To be implemented in next step */}
+            
             <Card title="Risk Adjustment (Affects Projections)">
                 <Paragraph>Select your risk tolerance. This will adjust the assumed returns and suggested portfolio allocation in the projections.</Paragraph>
-                {/* Risk Slider component will go here */}
-                {/* Display of adjusted portfolio will go here */}
+                
+                
                 <Text>Risk Adjustment Slider and dynamic portfolio display will be added in the Projections section.</Text>
             </Card>
 

@@ -1,67 +1,67 @@
-// src/pages/DashboardPage.js
+
 import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { Row, Col, Card, Statistic, Typography, Tag, Divider, List, Select, Spin, Alert } from 'antd'; // Added Select, Spin, Alert
+import { Row, Col, Card, Statistic, Typography, Tag, Divider, List, Select, Spin, Alert } from 'antd'; 
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import { Line } from 'react-chartjs-2';
 import {
-    Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title as ChartTitle, Tooltip, Legend, Ticks, Filler // *** Import Filler ***
+    Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title as ChartTitle, Tooltip, Legend, Ticks, Filler 
 } from 'chart.js';
-import { supabase } from '../supabaseClient'; // Direct Supabase client
-import { AuthContext } from '../App'; // To get user email
+import { supabase } from '../supabaseClient'; 
+import { AuthContext } from '../App'; 
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ChartTitle, Tooltip, Legend, Filler);
 
-const { Title, Text, Paragraph } = Typography; // Added Paragraph
+const { Title, Text, Paragraph } = Typography; 
 const { Option } = Select;
 
-// --- Helper Functions ---
+
 const formatIndianNumber = (value, decimals = 0) => {
     const num = Number(value);
     if (isNaN(num)) return '₹ 0';
-    // Use toLocaleString for Indian numbering system formatting
+    
     return `₹ ${num.toLocaleString('en-IN', { maximumFractionDigits: decimals, minimumFractionDigits: decimals })}`;
 };
 
 const safeGetNumber = (value, defaultValue = 0) => {
-    const num = Number(String(value).replace(/₹|,/g, '')); // Remove currency symbols/commas before converting
+    const num = Number(String(value).replace(/₹|,/g, '')); 
     return isNaN(num) ? defaultValue : num;
 };
-// ---
 
-// --- Static Chart Data (As requested) ---
-const fundValueChartData = { /* ... static data from previous version ... */
+
+
+const fundValueChartData = { 
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [{ label: 'Fund Value', data: [500000, 510000, 530000, 520000, 550000, 560000, 580000, 600000, 590000, 610000, 630000, 650000], borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.1)', tension: 0.1, fill: true, pointRadius: 2, pointHoverRadius: 5, }],
 };
-const fundValueChartOptions = { /* ... static options formatting y-axis with formatIndianNumber ... */
+const fundValueChartOptions = { 
     responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (ctx) => `${ctx.dataset.label || ''}: ${formatIndianNumber(ctx.parsed.y)}` } } }, scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } }, y: { grid: { color: '#f0f0f0', drawBorder: false }, ticks: { callback: (v) => formatIndianNumber(v), maxTicksLimit: 5 } } }
 };
-const marketTodayData = { // Static market data
+const marketTodayData = { 
     sensex: { value: '75,123.45', change: '+350.12 (+0.47%)', changeType: 'up' },
     nifty: { value: '22,876.50', change: '+120.50 (+0.53%)', changeType: 'up' },
 };
-// ---
 
-// Define major asset category keys and display names (Match keys in existing_investments JSON)
+
+
 const MAJOR_CATEGORIES = {
     'Equity': 'Equity (Stocks)',
     'Fixed-Income': 'Fixed Income',
     'Real Estate': 'Real Estate',
     'Commodities': 'Commodities',
     'Alternative Investments': 'Alternative Investments',
-    'Cryptocurrencies & Digital Assets': 'Cryptocurrencies', // Shorter name for display
-    'Derivatives & Structured Products': 'Derivatives', // Shorter name for display
+    'Cryptocurrencies & Digital Assets': 'Cryptocurrencies', 
+    'Derivatives & Structured Products': 'Derivatives', 
     'Cash & Cash Equivalents': 'Cash & Equivalents',
 };
 
 const DashboardPage = () => {
-    const { user } = useContext(AuthContext); // Get user context
+    const { user } = useContext(AuthContext); 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [investmentData, setInvestmentData] = useState(null); // Stores the raw existing_investments JSON
-    const [selectedReturnPeriod, setSelectedReturnPeriod] = useState('3Y'); // Default state for dropdown
+    const [investmentData, setInvestmentData] = useState(null); 
+    const [selectedReturnPeriod, setSelectedReturnPeriod] = useState('3Y'); 
 
-    // Fetch data directly from Supabase
+    
     useEffect(() => {
         const fetchDashboardData = async (email) => {
             if (!email) {
@@ -71,32 +71,32 @@ const DashboardPage = () => {
             }
             setLoading(true);
             setError(null);
-            setInvestmentData(null); // Clear previous data
+            setInvestmentData(null); 
 
             try {
                 console.log(`Fetching investments for: ${email}`);
                 const { data, error: fetchError } = await supabase
-                    .from('users') // Target the 'users' table
-                    .select('existing_investments') // Select only the JSONB column
+                    .from('users') 
+                    .select('existing_investments') 
                     .eq('email', email)
-                    .single(); // Expect only one row for the user
+                    .single(); 
 
                 if (fetchError) {
-                    if (fetchError.code === 'PGRST116') { // Code for 'No rows found'
+                    if (fetchError.code === 'PGRST116') { 
                         console.warn(`No data found for user: ${email}. Existing investments might be null.`);
-                        setInvestmentData({}); // Set to empty object if no row found or column is null
+                        setInvestmentData({}); 
                     } else {
-                        throw fetchError; // Throw other Supabase errors
+                        throw fetchError; 
                     }
                 }
 
                 console.log("Raw investment data fetched:", data?.existing_investments);
-                setInvestmentData(data?.existing_investments || {}); // Store the JSONB data or empty obj
+                setInvestmentData(data?.existing_investments || {}); 
 
             } catch (err) {
                 console.error('Error fetching dashboard data:', err);
                 setError(`Failed to load investment data: ${err.message}`);
-                setInvestmentData({}); // Set empty object on error
+                setInvestmentData({}); 
             } finally {
                 setLoading(false);
             }
@@ -106,14 +106,14 @@ const DashboardPage = () => {
             fetchDashboardData(user.email);
         } else {
             setError("User not available.");
-            setLoading(false); // Not loading if no user
+            setLoading(false); 
         }
-    }, [user]); // Refetch when user changes
+    }, [user]); 
 
-    // Process fetched data using useMemo
+    
     const processedData = useMemo(() => {
         if (!investmentData || Object.keys(investmentData).length === 0) {
-            return { // Return default structure if no data
+            return { 
                 equityDirect: 0, equityMutual: 0, equityEtf: 0, equityCaps: 0,
                 assetValues: {}, totalNetWorth: 0,
                 equityPerformance: 0, averageExpectedReturns: {},
@@ -124,46 +124,46 @@ const DashboardPage = () => {
         let totalNetWorth = 0;
         let totalEquityInvested = 0;
         let totalEquityCurrent = 0;
-        const assetValues = {}; // Current value per major category
-        const averageExpectedReturns = {}; // Avg expected return per major category
+        const assetValues = {}; 
+        const averageExpectedReturns = {}; 
 
-        // Initialize sums
+        
         Object.keys(MAJOR_CATEGORIES).forEach(key => {
             assetValues[key] = 0;
             averageExpectedReturns[key] = { totalReturn: 0, count: 0 };
         });
 
-        // Iterate through the fetched JSON data
+        
         Object.entries(investmentData).forEach(([categoryKey, items]) => {
-            if (!Array.isArray(items)) return; // Skip if not an array
+            if (!Array.isArray(items)) return; 
 
             items.forEach(item => {
-                // Use current_value if available, else invested_amount. For Real Estate, use property_value
+                
                 const currentValue = safeGetNumber(item.current_value ?? item.property_value ?? item.invested_amount);
                 const investedAmount = safeGetNumber(item.invested_amount);
-                // Determine the expected return field based on type
+                
                 const expectedReturn = safeGetNumber(item.expected_return ?? item.interest_rate ?? item.rental_yield);
 
                 totalNetWorth += currentValue;
 
-                // Aggregate current value for the major category
+                
                 if (assetValues[categoryKey] !== undefined) {
                     assetValues[categoryKey] += currentValue;
                 }
 
-                // Aggregate expected returns
+                
                 if (averageExpectedReturns[categoryKey] !== undefined && expectedReturn > 0) {
                     averageExpectedReturns[categoryKey].totalReturn += expectedReturn;
                     averageExpectedReturns[categoryKey].count += 1;
                 }
 
 
-                // Specific Equity calculations
+                
                 if (categoryKey === 'Equity') {
                     totalEquityInvested += investedAmount;
                     totalEquityCurrent += currentValue;
 
-                    // Breakdown for top boxes based on 'type'
+                    
                     const typeLower = item.type?.toLowerCase() || '';
                     if (typeLower.includes('direct')) equityDirect += currentValue;
                     else if (typeLower.includes('mutual')) equityMutual += currentValue;
@@ -173,13 +173,13 @@ const DashboardPage = () => {
             });
         });
 
-        // Finalize average returns
+        
         Object.keys(averageExpectedReturns).forEach(key => {
             const { totalReturn, count } = averageExpectedReturns[key];
-            averageExpectedReturns[key] = count > 0 ? totalReturn / count : 0; // Calculate average
+            averageExpectedReturns[key] = count > 0 ? totalReturn / count : 0; 
         });
 
-        // Calculate equity performance
+        
         const equityPerformance = totalEquityInvested > 0
             ? ((totalEquityCurrent - totalEquityInvested) / totalEquityInvested) * 100
             : 0;
@@ -189,25 +189,25 @@ const DashboardPage = () => {
             assetValues, totalNetWorth,
             equityPerformance, averageExpectedReturns,
         };
-    }, [investmentData]); // Recalculate when fetched data changes
+    }, [investmentData]); 
 
-    // Prepare data for lists
+    
     const assetValueList = Object.entries(MAJOR_CATEGORIES)
         .map(([key, name]) => ({
             name: name,
             value: processedData.assetValues[key] || 0,
         }))
-        .filter(item => item.value > 0); // Filter out zero values for cleaner display
+        .filter(item => item.value > 0); 
 
     const investmentReturnList = Object.entries(MAJOR_CATEGORIES)
         .map(([key, name]) => ({
             name: name,
-            // Using calculated average expected return - dropdown doesn't affect this calculation
+            
             value: processedData.averageExpectedReturns[key] || 0,
         }));
 
 
-    // --- Render Logic ---
+    
     if (loading) {
         return <Spin tip="Loading Dashboard..." size="large" style={{ display: 'block', marginTop: '50px' }} />;
     }
@@ -220,7 +220,7 @@ const DashboardPage = () => {
         <div>
             <Title level={3} style={{ marginBottom: '20px' }}>Dashboard</Title>
 
-            {/* Top 4 Equity Boxes */}
+            {}
             <Title level={4} style={{ marginBottom: '10px', fontWeight: 500 }}>Equity</Title>
             <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
                 <Col xs={24} sm={12} lg={6}><Card size="small" bordered={false} style={{ background: '#f0f5ff' }}><Statistic title="Direct Stocks" value={processedData.equityDirect} formatter={(v) => formatIndianNumber(v)} valueStyle={{ fontSize: '18px' }} /></Card></Col>
@@ -231,14 +231,14 @@ const DashboardPage = () => {
 
             <Divider />
 
-            {/* Big Graph (Static) & Right Side Column */}
+            {}
             <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
-                {/* Big Graph */}
+                {}
                 <Col xs={24} lg={16} style={{ display: 'flex', flexDirection: 'column' }}>
                     <Card
                         title="Fund Value"
                         
-                        style={{ flex: 1 ,paddingBottom:'0px'}} // Ensures the card takes up the full height
+                        style={{ flex: 1 ,paddingBottom:'0px'}} 
                     >
                         
                         <Line options={fundValueChartOptions} data={fundValueChartData} style={{minHeight:'100%',height:'400px'}} />
@@ -246,9 +246,9 @@ const DashboardPage = () => {
                     </Card>
                 </Col>
 
-                {/* Right Side: Asset Values & Market Today */}
+                {}
                 <Col xs={24} lg={8} style={{ display: 'flex', flexDirection: 'column' }}>
-                    {/* Asset-wise Values */}
+                    {}
                     <Card
                         title="Asset-wise Current Values"
                         size="small"
@@ -268,7 +268,7 @@ const DashboardPage = () => {
                             locale={{ emptyText: 'No assets found' }}
                         />
                     </Card>
-                    {/* Market Today */}
+                    {}
                     <Card title="Market Today" size="small" style={{ flex: 1 }}>
                         <Row gutter={16}>
                             <Col span={12}>
@@ -324,13 +324,13 @@ const DashboardPage = () => {
 
             <Divider />
 
-            {/* Bottom Row: Equity Performance & Investment Returns */}
+            {}
             <Row gutter={[24, 24]}>
-                {/* Left: Equity Performance & Net Worth */}
+                {}
                 <Col xs={24} lg={16}>
                     <Card title="Equity Based Investments Performance" size="small" style={{ marginBottom: '16px' }}>
                         <Statistic
-                            // title="Equity Performance" // Title already on card
+                            
                             value={processedData.equityPerformance}
                             precision={2}
                             valueStyle={{ fontSize: '24px', color: processedData.equityPerformance >= 0 ? '#3f8600' : '#cf1322' }}
@@ -344,7 +344,7 @@ const DashboardPage = () => {
                     </Card>
                 </Col>
 
-                {/* Right: Returns on Investments */}
+                {}
                 <Col xs={24} lg={8}>
                     <Card title="Returns on Investments" size="small">
                         <Select
@@ -356,7 +356,7 @@ const DashboardPage = () => {
                                 { value: '3Y', label: '3 Years Return' },
                                 { value: '5Y', label: '5 Years Return' },
                                 { value: '10Y', label: '10 Years Return' },
-                                { value: 'EXPECTED', label: 'Average Expected Return*' }, // Added option
+                                { value: 'EXPECTED', label: 'Average Expected Return*' }, 
                             ]}
                         />
                         <List

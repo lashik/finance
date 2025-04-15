@@ -1,19 +1,19 @@
-// src/pages/PersonalDetailsPage.js
+
 import React, { useState, useEffect, useContext } from 'react';
 import {
     Typography, Card, Descriptions, Table, Select, InputNumber, Button, Space, Form, Input, DatePicker, Row, Col
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, ExclamationOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs'; // Import dayjs for DatePicker
-import { supabase } from '../supabaseClient'; // Ensure you have a Supabase client configured
+import dayjs from 'dayjs'; 
+import { supabase } from '../supabaseClient'; 
 import { AuthContext } from '../App';
 const { Title } = Typography;
 const { Option } = Select;
 
-// --- Initial Data ---
+
 const initialPersonalInfo = {
-    name: '', // Example data
-    dob: null, // Use dayjs object for DatePicker
+    name: '', 
+    dob: null, 
     gender: '',
     occupation: '',
     maritalStatus: '',
@@ -40,14 +40,14 @@ const initialExpenses = [
     { key: '12', category: 'Religious/social cause', amount: 0 },
     { key: '13', category: 'Entertainment / Leisure (Food, Shopping etc.)', amount: 0 },
 ];
-// --------------------
 
-// Fetch data from Supabase
+
+
 const fetchPersonalDetails = async (email) => {
     try {
         console.log('Fetching personal details for email:', email);
         const { data, error } = await supabase
-            .from('users') // Replace 'users' with your actual table name
+            .from('users') 
             .select('*')
             .eq('email', email)
             .single();
@@ -59,10 +59,10 @@ const fetchPersonalDetails = async (email) => {
         }
         console.log('Fetched Personal Details:', data);
 
-        // Map the fetched data to the state structure
+        
         const personalInfo = {
             name: data.name,
-            dob: dayjs(data.dob), // Convert to dayjs object
+            dob: dayjs(data.dob), 
             gender: data.gender,
             occupation: data.occupation,
             maritalStatus: data.maritalStatus,
@@ -97,12 +97,12 @@ const fetchPersonalDetails = async (email) => {
     }
 };
 
-// Update data in Supabase
+
 const updatePersonalDetails = async (email, personalInfo, incomeData, expensesData) => {
     try {
         const updates = {
             name: personalInfo.name,
-            dob: personalInfo.dob.format('YYYY-MM-DD'), // Convert dayjs to string
+            dob: personalInfo.dob.format('YYYY-MM-DD'), 
             gender: personalInfo.gender,
             occupation: personalInfo.occupation,
             maritalStatus: personalInfo.maritalStatus,
@@ -124,7 +124,7 @@ const updatePersonalDetails = async (email, personalInfo, incomeData, expensesDa
         };
 
         const { error } = await supabase
-            .from('users') // Replace 'users' with your actual table name
+            .from('users') 
             .update(updates)
             .eq('email', email);
 
@@ -142,11 +142,11 @@ const PersonalDetailsPage = () => {
     const [personalInfo, setPersonalInfo] = useState(initialPersonalInfo);
     const [incomeData, setIncomeData] = useState(initialIncome);
     const [expensesData, setExpensesData] = useState(initialExpenses);
-    const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM')); // Default to current month
+    const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM')); 
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Track unsaved changes
-    const [form] = Form.useForm(); // Form instance for editing personal info
-    const { user } = useContext(AuthContext); // Get user from context
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); 
+    const [form] = Form.useForm(); 
+    const { user } = useContext(AuthContext); 
     const userEmail = user ? user.email : null;
 
     useEffect(() => {
@@ -161,13 +161,13 @@ const PersonalDetailsPage = () => {
         fetchData();
     }, [user]);
 
-    // Handle edits in tables
+    
     const handleIncomeChange = (key, field, value) => {
         const newData = incomeData.map(item =>
             item.key === key ? { ...item, [field]: value } : item
         );
         setIncomeData(newData);
-        setHasUnsavedChanges(true); // Mark as unsaved
+        setHasUnsavedChanges(true); 
     };
 
     const handleExpenseChange = (key, field, value) => {
@@ -175,17 +175,17 @@ const PersonalDetailsPage = () => {
             item.key === key ? { ...item, [field]: value } : item
         );
         setExpensesData(newData);
-        setHasUnsavedChanges(true); // Mark as unsaved
+        setHasUnsavedChanges(true); 
     };
 
     const handleSaveFinancialInfo = async () => {
         const success = await updatePersonalDetails(userEmail, personalInfo, incomeData, expensesData);
         if (success) {
-            setHasUnsavedChanges(false); // Reset unsaved changes after saving
+            setHasUnsavedChanges(false); 
         }
     };
 
-    // Calculate Totals
+    
     const totalIncome = incomeData.reduce((sum, item) => sum + (item.amount || 0), 0);
     const totalExpenses = expensesData.reduce((sum, item) => sum + (item.amount || 0), 0);
     const netSavings = totalIncome - totalExpenses;
@@ -194,13 +194,13 @@ const PersonalDetailsPage = () => {
         <div>
             <Title level={2} style={{ marginBottom: '24px' }}>Personal Details & Finances</Title>
 
-            {/* Personal Details Section */}
+            {}
             <Card title="Personal Information" extra={<Button onClick={() => setIsEditingPersonalInfo(!isEditingPersonalInfo)}>{isEditingPersonalInfo ? 'Cancel' : 'Edit'}</Button>} style={{ marginBottom: '24px' }}>
                 {isEditingPersonalInfo ? (
                     <Form form={form} layout="vertical" onFinish={(values) => {
                         const updatedPersonalInfo = {
                             ...values,
-                            dob: values.dob ? dayjs(values.dob) : null, // Store as dayjs object or null
+                            dob: values.dob ? dayjs(values.dob) : null, 
                         };
                         setPersonalInfo(updatedPersonalInfo);
                         setIsEditingPersonalInfo(false);
@@ -241,7 +241,7 @@ const PersonalDetailsPage = () => {
                                     <Option value={2}>2</Option>
                                     <Option value={3}>3</Option>
                                     <Option value={4}>4</Option>
-                                    <Option value="4+">4+</Option> {/* Store as string if needed */}
+                                    <Option value="4+">4+</Option> {}
                                 </Select>
                             </Form.Item></Col>
                         </Row>
@@ -253,7 +253,7 @@ const PersonalDetailsPage = () => {
                 ) : (
                     <Descriptions bordered column={{ xs: 1, sm: 2 }}>
                         <Descriptions.Item label="Name">{personalInfo.name}</Descriptions.Item>
-                        <Descriptions.Item label="D.O.B. / Age">{personalInfo.dob ? personalInfo.dob.format('YYYY-MM-DD') : 'N/A'} {/* Calculate Age if needed */}</Descriptions.Item>
+                        <Descriptions.Item label="D.O.B. / Age">{personalInfo.dob ? personalInfo.dob.format('YYYY-MM-DD') : 'N/A'} {}</Descriptions.Item>
                         <Descriptions.Item label="Gender">{personalInfo.gender}</Descriptions.Item>
                         <Descriptions.Item label="Occupation">{personalInfo.occupation}</Descriptions.Item>
                         <Descriptions.Item label="Marital Status">{personalInfo.maritalStatus}</Descriptions.Item>
@@ -262,16 +262,16 @@ const PersonalDetailsPage = () => {
                 )}
             </Card>
 
-            {/* Month Selection */}
+            {}
             <Form layout="inline" style={{ marginBottom: '24px' }}>
                 <Form.Item label="Select Month">
                     <DatePicker picker="month" value={dayjs(selectedMonth, 'YYYY-MM')} onChange={(date, dateString) => setSelectedMonth(dateString || dayjs().format('YYYY-MM'))} />
                 </Form.Item>
-                {/* Add Button to save monthly data if needed */}
+                {}
                 <Button type="primary">Add/Edit Monthly Figures</Button>
             </Form>
 
-            {/* Income Table */}
+            {}
             <Card title={`Monthly Income (${dayjs(selectedMonth).format('MMMM YYYY')})`} style={{ marginBottom: '24px' }}>
                 <Table
                     columns={[
@@ -312,16 +312,16 @@ const PersonalDetailsPage = () => {
                 />
             </Card>
 
-            {/* Expenses Table */}
+            {}
             <Card
                 title={`Monthly Expenses (${dayjs(selectedMonth).format('MMMM YYYY')})`}
                 extra={
                     <Button
                         type="primary"
                         onClick={handleSaveFinancialInfo}
-                        disabled={!hasUnsavedChanges} // Disable button if no unsaved changes
+                        disabled={!hasUnsavedChanges} 
                         style={{
-                            backgroundColor: hasUnsavedChanges ? '#1890ff' : '#d9d9d9', // Blue if unsaved, gray otherwise
+                            backgroundColor: hasUnsavedChanges ? '#1890ff' : '#d9d9d9', 
                             borderColor: hasUnsavedChanges ? '#1890ff' : '#d9d9d9',
                         }}
                     >
@@ -333,7 +333,7 @@ const PersonalDetailsPage = () => {
                     onClick={() => {
                         const newKey = (expensesData.length + 1).toString();
                         setExpensesData([...expensesData, { key: newKey, category: '', amount: 0 }]);
-                        setHasUnsavedChanges(true); // Mark as unsaved
+                        setHasUnsavedChanges(true); 
                     }}
                     type="dashed"
                     icon={<PlusOutlined />}
@@ -378,7 +378,7 @@ const PersonalDetailsPage = () => {
                                     icon={<DeleteOutlined />}
                                     onClick={() => {
                                         setExpensesData(expensesData.filter(item => item.key !== record.key));
-                                        setHasUnsavedChanges(true); // Mark as unsaved
+                                        setHasUnsavedChanges(true); 
                                     }}
                                     danger
                                     type="link"
@@ -404,7 +404,7 @@ const PersonalDetailsPage = () => {
                                         controls={false}
                                     />
                                 </Table.Summary.Cell>
-                                <Table.Summary.Cell index={3}></Table.Summary.Cell> {/* Empty cell for action column */}
+                                <Table.Summary.Cell index={3}></Table.Summary.Cell> {}
                             </Table.Summary.Row>
                             <Table.Summary.Row style={{ background: '#e6f7ff', fontWeight: 'bold' }}>
                                 <Table.Summary.Cell index={0} colSpan={2}>Net Savings</Table.Summary.Cell>

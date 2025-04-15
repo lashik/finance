@@ -1,54 +1,54 @@
-// src/pages/RegisterPage.js
+
 import React, { useState, useContext } from 'react';
 import { Form, Input, Button, Card, Typography, Row, Col, DatePicker, Select, Alert } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, PhoneOutlined, GlobalOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../App'; // Import context
+import { AuthContext } from '../App'; 
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Mock list of countries for dropdown
-const countries = ["USA", "Canada", "UK", "Australia", "India", "Germany", "France"]; // Add more as needed
 
-// --- Mock User Store ---
-// In a real app, this would be checked against a backend database
+const countries = ["USA", "Canada", "UK", "Australia", "India", "Germany", "France"]; 
+
+
+
 const registeredUsers = new Set(['existing@example.com']);
-// --------------------
+
 
 const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const { register } = useContext(AuthContext); // Get register function from context
+    const { register } = useContext(AuthContext); 
     const navigate = useNavigate();
-    const [form] = Form.useForm(); // To access form instance
+    const [form] = Form.useForm(); 
 
     const onFinish = async (values) => {
         setLoading(true);
         setError('');
 
-        // --- Mock Duplicate Check ---
+        
         if (registeredUsers.has(values.email)) {
             setError('Email address already registered.');
             setLoading(false);
             return;
         }
-        // Add mobile number duplicate check if needed
-        // --------------------------
+        
+        
 
         try {
-            // --- Mock Registration ---
-            // In a real app, call an API: await authService.register(values);
+            
+            
             console.log('Registration attempt:', values);
-            // Add to mock store (in real app, backend handles this)
+            
             registeredUsers.add(values.email);
             register({
                 name: values.name,
                 email: values.email,
-                //... include other relevant data if needed by auth context
-            }); // Update auth state via context
-            navigate('/dashboard'); // Redirect on success
-            // ------------------
+                
+            }); 
+            navigate('/dashboard'); 
+            
         } catch (err) {
             setError('Registration failed. Please try again.');
             console.error("Registration error:", err);
@@ -103,7 +103,7 @@ const RegisterPage = () => {
                             label="Mobile Number"
                             rules={[
                                 { required: true, message: 'Please input your Mobile Number!' },
-                                // Add pattern validation if needed e.g., /^\d{10}$/
+                                
                             ]}
                         >
                             <Input prefix={<PhoneOutlined />} placeholder="Enter your mobile number" style={{ width: '100%' }}/>
@@ -125,7 +125,7 @@ const RegisterPage = () => {
                             name="password"
                             label="Password"
                             rules={[{ required: true, message: 'Please input your Password!' }]}
-                            hasFeedback // Adds validation icons
+                            hasFeedback 
                         >
                             <Input.Password prefix={<LockOutlined />} placeholder="Choose a strong password" />
                         </Form.Item>
