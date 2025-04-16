@@ -19,10 +19,10 @@ const LoginPage = () => {
         try {
             console.log('Login attempt:', values);
     
-            // Query the database to check email and password
+            
             const { data, error } = await supabase
-                .from('users') // Replace 'users' with your actual table name
-                .select('email, password') // Select the email and password fields
+                .from('users') 
+                .select('email, password') 
                 .eq('email', values.email)
                 .single();
     
@@ -30,13 +30,13 @@ const LoginPage = () => {
                 console.error('Error fetching user:', error?.message || 'User not found');
                 setError('Invalid email or password.');
             } else if (data.password !== values.password) {
-                // Compare the entered password with the stored password
+                
                 console.error('Password mismatch');
                 setError('Invalid email or password.');
             } else {
                 console.log('Login successful:', data);
-                login(values.email); // Update the AuthContext with the logged-in user's email
-                navigate('/dashboard'); // Navigate to the dashboard
+                login(values.email); 
+                navigate('/dashboard'); 
             }
         } catch (err) {
             setError('Login failed. Please try again.');
