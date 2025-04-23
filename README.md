@@ -2,42 +2,39 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+#Deployment 
+Go to https://vercel.com/
+![image](https://github.com/user-attachments/assets/1ee6ce9f-5d18-4bba-9e2f-306dcb518300)
+Log in with your GitHub account on which you have pushed the repo.
+![image](https://github.com/user-attachments/assets/2b5340f2-283a-4336-8157-6b7cde6c7ddd)
+The dashboard opens, next click on add New(It can look a little different since I don't have another GitHub account, I can't show it)
+Click on the project 
+![image](https://github.com/user-attachments/assets/7e36f3f6-4fe0-4fe5-bfb7-f3ac59115eda)
+This should open if you can't see any repositories. click on 
+![image](https://github.com/user-attachments/assets/31d32f50-b6ed-40e1-94c3-281948bf5fae)
+Then follow the steps and select the repo you pushed
+![image](https://github.com/user-attachments/assets/573b58a0-75e6-4144-b88d-7d4a069b80d8)
+After giving it access
+![image](https://github.com/user-attachments/assets/924f843d-20ee-4787-a14d-503360a51a13)
+Scroll down to repo access
+Click on select repo, and then add the repo. You are done. 
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+#Database
+Go to https://supabase.com/
+![image](https://github.com/user-attachments/assets/d411214f-89da-440c-9a03-9d8257a84abc)
+Click on Start Your Project 
+Log in however you like
+![image](https://github.com/user-attachments/assets/7cbc33ea-63c0-43fd-882c-0a4a44588645)
+Create your new project
+![image](https://github.com/user-attachments/assets/9dfdc4cc-7c2d-4d35-ba92-e50514e8e539)
+After clicking 
+![image](https://github.com/user-attachments/assets/d7ae5163-e608-469c-8d39-b43e74ee8c47)
+Go to the sidebar menu to find project settings
+![image](https://github.com/user-attachments/assets/0a4a2512-60e3-4cde-9a4e-0d2fcd090ad4)
+Go to the Data API under Configuration
+![image](https://github.com/user-attachments/assets/8a1fcbbc-d441-4844-a4d4-5e7910d0a571)
+You will get the URL and API key like what has been used in the supabseClient.js 
+Keep the format of supabseClient.js as is, putting the api key and api url in .env breaks the deployment. Keep the repo private so the API key isn't stolen.
 
 ## Learn More
 
