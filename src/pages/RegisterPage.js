@@ -3,52 +3,75 @@ import React, { useState, useContext } from 'react';
 import { Form, Input, Button, Card, Typography, Row, Col, DatePicker, Select, Alert } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, PhoneOutlined, GlobalOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../App'; 
-
+import { AuthContext } from '../App';
+import { supabase } from '../supabaseClient';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 
-const countries = ["USA", "Canada", "UK", "Australia", "India", "Germany", "France"]; 
+const countries = ["USA", "Canada", "UK", "Australia", "India", "Germany", "France"];
 
 
 
-const registeredUsers = new Set(['existing@example.com']);
+
 
 
 const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const { register } = useContext(AuthContext); 
+    const { register } = useContext(AuthContext);
     const navigate = useNavigate();
-    const [form] = Form.useForm(); 
+    const [form] = Form.useForm();
 
     const onFinish = async (values) => {
         setLoading(true);
         setError('');
 
-        
-        if (registeredUsers.has(values.email)) {
-            setError('Email address already registered.');
-            setLoading(false);
-            return;
-        }
-        
-        
+
+
+
 
         try {
-            
-            
-            console.log('Registration attempt:', values);
-            
-            registeredUsers.add(values.email);
+
+            const { data: existingUser, error: fetchError } = await supabase
+                .from('users')
+                .select('email')
+                .eq('email', values.email)
+                .single();
+
+            if (existingUser) {
+                setError('Email address already registered.');
+                setLoading(false);
+                return;
+            }
+
+
+            const { error: insertError } = await supabase
+                .from('users')
+                .insert([{
+                    name: values.name,
+                    email: values.email,
+                    password: values.password,
+                    dob: values.dob ? values.dob.format('YYYY-MM-DD') : null,
+                    country: values.country,
+                    number: values.mobile,
+                    pdfilled:true,
+
+                }]);
+
+            if (insertError) {
+                setError('Registration failed. Please try again.');
+                console.error("Insert error:", insertError.message);
+                setLoading(false);
+                return;
+            }
+
+
             register({
                 name: values.name,
                 email: values.email,
-                
-            }); 
-            navigate('/dashboard'); 
-            
+            });
+            navigate('/dashboard');
         } catch (err) {
             setError('Registration failed. Please try again.');
             console.error("Registration error:", err);
@@ -78,7 +101,7 @@ const RegisterPage = () => {
                             <Input prefix={<UserOutlined />} placeholder="Enter your full name" />
                         </Form.Item>
 
-                         <Form.Item
+                        <Form.Item
                             name="dob"
                             label="Date of Birth"
                             rules={[{ required: true, message: 'Please select your Date of Birth!' }]}
@@ -103,10 +126,10 @@ const RegisterPage = () => {
                             label="Mobile Number"
                             rules={[
                                 { required: true, message: 'Please input your Mobile Number!' },
-                                
+
                             ]}
                         >
-                            <Input prefix={<PhoneOutlined />} placeholder="Enter your mobile number" style={{ width: '100%' }}/>
+                            <Input prefix={<PhoneOutlined />} placeholder="Enter your mobile number" style={{ width: '100%' }} />
                         </Form.Item>
 
 
@@ -125,7 +148,7 @@ const RegisterPage = () => {
                             name="password"
                             label="Password"
                             rules={[{ required: true, message: 'Please input your Password!' }]}
-                            hasFeedback 
+                            hasFeedback
                         >
                             <Input.Password prefix={<LockOutlined />} placeholder="Choose a strong password" />
                         </Form.Item>
@@ -147,7 +170,7 @@ const RegisterPage = () => {
                                 }),
                             ]}
                         >
-                             <Input.Password prefix={<LockOutlined />} placeholder="Confirm your password" />
+                            <Input.Password prefix={<LockOutlined />} placeholder="Confirm your password" />
                         </Form.Item>
 
 
